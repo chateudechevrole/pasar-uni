@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
-import { ChevronLeft, Share2, Heart, ShieldCheck, MapPin, User, MessageCircle, ShoppingCart, GraduationCap } from 'lucide-react'
+import { ChevronLeft, Share2, Heart, ShieldCheck, MapPin, User, MessageCircle, ShoppingCart, GraduationCap, Trash2, CheckCircle2 } from 'lucide-react'
 import { BuyNowModal } from '@/components/BuyNowModal'
 
 export default function ItemDetailPage() {
@@ -126,6 +126,71 @@ export default function ItemDetailPage() {
       setIsSubmittingQuestion(false)
     }
   }
+
+  const handleDeleteItem = async () => {
+    if (!currentUser || currentUser.id !== item.seller_id) {
+      alert('You can only delete your own items')
+      return
+    }
+
+    if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', params.id)
+
+      if (error) throw error
+
+      alert('Item deleted successfully!')
+      router.push('/profile')
+    } catch (error) {
+      console.error('Error deleting item:', error)
+      alert('Failed to delete item')
+    }
+  }
+
+  const handleMarkAsSold = async () => {
+    if (!currentUser || currentUser.id !== item.seller_id) {
+      alert('You can only mark your own items as sold')
+      return
+    }
+
+    if (!confirm('Mark this item as sold?')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('items')
+        .update({ status: 'SOLD' })
+        .eq('id', params.id)
+
+      if (error) throw error
+
+      // Refresh item data
+      const { data: updatedItem } = await supabase
+        .from('items')
+        .select(`
+          *,
+          seller:profiles!seller_id(username, avatar_url, university, is_verified_student, bank_account)
+        `)
+        .eq('id', params.id)
+        .single()
+
+      setItem(updatedItem)
+      alert('Item marked as sold! ✅')
+    } catch (error) {
+      console.error('Error marking as sold:', error)
+      alert('Failed to mark as sold')
+    }
+  }
+
+  // Check if current user is the seller
+  const isOwner = currentUser && item && currentUser.id === item.seller_id
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -254,6 +319,31 @@ export default function ItemDetailPage() {
               View Profile
             </button>
           </div>
+
+          {/* Seller Action Buttons - Only shown to item owner */}
+          {isOwner && (
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+              <h3 className="font-bold text-pasar-dark text-sm uppercase tracking-wider mb-3">Manage Your Item</h3>
+              <div className="flex gap-3">
+                {item.status !== 'SOLD' && (
+                  <button
+                    onClick={handleMarkAsSold}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all border-2 border-green-700 shadow-[3px_3px_0px_0px_rgba(21,128,61,1)]"
+                  >
+                    <CheckCircle2 size={18} />
+                    <span>Mark as Sold</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleDeleteItem}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all border-2 border-red-700 shadow-[3px_3px_0px_0px_rgba(153,27,27,1)]"
+                >
+                  <Trash2 size={18} />
+                  <span>Delete Item</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* B. 商品详情 */}
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">

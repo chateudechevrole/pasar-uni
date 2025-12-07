@@ -165,13 +165,13 @@ export default function HomePage() {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-pasar-dark w-8 h-8" /></div>
         ) : items.length > 0 ? (
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 px-1">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-1">
             {items.map((item) => {
               const seller = getSellerInfo(item);
               return (
-                <Link href={`/items/${item.id}`} key={item.id} className="block break-inside-avoid mb-4">
-                  <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                    <div className="relative aspect-[4/5] w-full bg-gray-200 overflow-hidden">
+                <Link href={`/items/${item.id}`} key={item.id}>
+                  <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
+                    <div className="relative aspect-[4/5] w-full bg-gray-200">
                       {/* 优先显示第一张图 */}
                       <Image 
                         src={(item.images && item.images.length > 0) ? item.images[0] : '/placeholder.png'} 
@@ -179,19 +179,19 @@ export default function HomePage() {
                         fill 
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className="object-cover"
-                        priority={false}
+                        unoptimized
                       />
                       <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2.5 py-1 rounded-lg shadow-sm z-10">
                         <span className="text-xs font-black text-pasar-dark">RM {item.price}</span>
                       </div>
                     </div>
-                    <div className="p-3">
-                      <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 mb-2">{item.title}</h3>
+                    <div className="p-3 flex-1 flex flex-col">
+                      <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 mb-2 flex-1">{item.title}</h3>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 overflow-hidden">
                           <div className="w-5 h-5 rounded-full bg-gray-100 overflow-hidden relative shrink-0 border border-gray-100">
                              {seller.avatar_url ? (
-                               <Image src={seller.avatar_url} alt="Av" fill className="object-cover" />
+                               <Image src={seller.avatar_url} alt="Av" fill className="object-cover" unoptimized />
                              ) : (
                                <div className="flex items-center justify-center h-full w-full bg-pasar-secondary">
                                  <GraduationCap size={12} className="text-pasar-dark" />
