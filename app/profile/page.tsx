@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createBrowserClient } from '@supabase/ssr'
-import { Settings, Share2, Package, Star, Bookmark, Loader2, Save, LogOut, Camera, User, School, CreditCard } from 'lucide-react'
+import { Settings, Share2, Package, Star, Bookmark, Loader2, Save, LogOut, Camera, User, School, CreditCard, Trash2, CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
 
 // 定义数据类型
 type Profile = {
@@ -167,6 +168,61 @@ export default function ProfilePage() {
       alert('Failed to upload avatar')
     } finally {
       setIsUploadingAvatar(false)
+    }
+  }
+
+  // Delete item handler
+  const handleDeleteItem = async (itemId: string, e: React.MouseEvent) => {
+    e.preventDefault() // Prevent navigation
+    e.stopPropagation()
+
+    if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', itemId)
+
+      if (error) throw error
+
+      // Remove from local state
+      setMyItems(myItems.filter(item => item.id !== itemId))
+      setStats({ ...stats, items: stats.items - 1 })
+      alert('Item deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting item:', error)
+      alert('Failed to delete item')
+    }
+  }
+
+  // Mark as sold handler
+  const handleMarkAsSold = async (itemId: string, e: React.MouseEvent) => {
+    e.preventDefault() // Prevent navigation
+    e.stopPropagation()
+
+    if (!confirm('Mark this item as sold?')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('items')
+        .update({ status: 'SOLD' })
+        .eq('id', itemId)
+
+      if (error) throw error
+
+      // Update local state
+      setMyItems(myItems.map(item => 
+        item.id === itemId ? { ...item, status: 'SOLD' } : item
+      ))
+      alert('Item marked as sold! ✅')
+    } catch (error) {
+      console.error('Error marking as sold:', error)
+      alert('Failed to mark as sold')
     }
   }
 
@@ -363,23 +419,48 @@ export default function ProfilePage() {
         <div className="min-h-[200px]">
           {activeTab === 'stalls' ? (
             myItems.length > 0 ? (
-              <div className="columns-2 md:columns-3 gap-4 space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {myItems.map((item) => (
-                  <div key={item.id} className="break-inside-avoid group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                  <Link 
+                    key={item.id} 
+                    href={`/items/${item.id}`}
+                    className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer relative"
+                  >
                     
                     {/* Image */}
-                    <div className="relative aspect-[4/5] bg-gray-100">
+                    <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
                       <Image 
                         src={item.images[0]} 
                         alt={item.title} 
                         fill 
+                        unoptimized
                         className="object-cover"
                       />
                       {item.status === 'SOLD' && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                           <span className="text-white font-bold border-2 border-white px-3 py-1 rounded-full -rotate-12">SOLD OUT</span>
                         </div>
                       )}
+
+                      {/* Action Buttons Overlay - Show on hover */}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2 z-20">
+                        {item.status !== 'SOLD' && (
+                          <button
+                            onClick={(e) => handleMarkAsSold(item.id, e)}
+                            className="p-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-lg border-2 border-green-700"
+                            title="Mark as sold"
+                          >
+                            <CheckCircle2 size={20} />
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => handleDeleteItem(item.id, e)}
+                          className="p-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all shadow-lg border-2 border-red-700"
+                          title="Delete item"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Text */}
@@ -393,7 +474,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
