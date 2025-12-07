@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, ChevronDown, Loader2, Search, ArrowRight, Bookmark, Store, Flag, Flame, Package, GraduationCap } from 'lucide-react'
+import { MapPin, ChevronDown, Loader2, Search, ArrowRight, Bookmark, Flag, Flame, Package, GraduationCap } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import { MALAYSIAN_UNIVERSITIES } from '@/lib/universities'
 
@@ -98,11 +98,7 @@ export default function HomePage() {
       {/* 1. HEADER */}
       <div className="bg-white sticky top-0 z-40 border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4 mb-3">
-             <div className="flex items-center gap-2">
-                <Store className="text-pasar-primary" size={28} strokeWidth={2.5} />
-                <span className="font-black text-pasar-dark text-xl hidden md:block">PasarUni</span>
-             </div>
+          <div className="flex items-center gap-4 mb-3">
              <div className="flex-1 relative">
                <input type="text" placeholder="Search..." className="w-full bg-gray-100 text-sm py-2.5 pl-10 pr-4 rounded-full focus:outline-none focus:ring-2 focus:ring-pasar-primary/50 transition-all"/>
                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -173,17 +169,19 @@ export default function HomePage() {
             {items.map((item) => {
               const seller = getSellerInfo(item);
               return (
-                <Link href={`/items/${item.id}`} key={item.id} className="block break-inside-avoid">
+                <Link href={`/items/${item.id}`} key={item.id} className="block break-inside-avoid mb-4">
                   <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                    <div className="relative aspect-[4/5] w-full bg-gray-200">
+                    <div className="relative aspect-[4/5] w-full bg-gray-200 overflow-hidden">
                       {/* 优先显示第一张图 */}
                       <Image 
                         src={(item.images && item.images.length > 0) ? item.images[0] : '/placeholder.png'} 
                         alt={item.title} 
                         fill 
-                        className="object-cover" 
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover"
+                        priority={false}
                       />
-                      <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2.5 py-1 rounded-lg shadow-sm">
+                      <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2.5 py-1 rounded-lg shadow-sm z-10">
                         <span className="text-xs font-black text-pasar-dark">RM {item.price}</span>
                       </div>
                     </div>
